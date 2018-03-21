@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("/client")
+@RestController
+@RequestMapping(value = "/client/*")
 public class ClientController {
 
     private final SessionService sessionService;
@@ -22,9 +23,15 @@ public class ClientController {
         this.sessionService = sessionService;
     }
 
-    @RequestMapping(value = "/otp", method = RequestMethod.POST)
+    @RequestMapping(value = "otp", method = RequestMethod.POST)
     public PublicKeyResponse verifyOTP(@RequestBody OTPRequest otpRequest) {
         if (otpRequest == null) return null;
+        ClientSession session = this.sessionService.createClientSession();
+        return PublicKeyResponse.fromClientSession(session);
+    }
+
+    @RequestMapping(value = "session", method = RequestMethod.GET)
+    public PublicKeyResponse startSessionNegotiation() {
         ClientSession session = this.sessionService.createClientSession();
         return PublicKeyResponse.fromClientSession(session);
     }
