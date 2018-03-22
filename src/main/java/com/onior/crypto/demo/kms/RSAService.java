@@ -16,7 +16,7 @@ import java.security.spec.X509EncodedKeySpec;
 @Service
 public class RSAService {
 
-    private final int keySize = 2048;
+    private final int keySize = 3072;
     private final String cipherType = "RSA";
     private KeyPairGenerator keyPairGenerator;
 

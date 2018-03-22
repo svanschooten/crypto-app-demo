@@ -34,6 +34,12 @@ public class AESService {
         return toBase64(new SecretKeySpec(tmp.getEncoded(), keySpecType));
     }
 
+    public String generateKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(keySpecType);
+        keyGenerator.init(keySize);
+        return toBase64(keyGenerator.generateKey());
+    }
+
     public String encrypt(String plaintext, String sessionKey) throws NoSuchPaddingException, NoSuchAlgorithmException,
             InvalidKeyException, InvalidParameterSpecException, UnsupportedEncodingException, BadPaddingException,
             IllegalBlockSizeException {

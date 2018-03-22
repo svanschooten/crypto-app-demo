@@ -12,7 +12,7 @@ public class ClientSessionResponse {
     @Getter @Setter
     private String refreshToken;
 
-    public ClientSessionResponse(String sessionId, String refreshToken) {
+    private ClientSessionResponse(String sessionId, String refreshToken) {
         this.sessionId = sessionId;
         this.refreshToken = refreshToken;
     }

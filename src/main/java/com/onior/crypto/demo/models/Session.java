@@ -27,4 +27,16 @@ public class Session {
         this.sessionStart = new Date();
         this.sessionId = UUID.randomUUID().toString();
     }
+
+    public Session refresh(String newRefreshToken, String newSessionKey) {
+        this.refreshToken = newRefreshToken;
+        this.sessionKey = newSessionKey;
+        this.sessionRefresh = new Date();
+        return this;
+    }
+
+    public enum Type {
+        CLIENT,
+        APPLICATION
+    }
 }
