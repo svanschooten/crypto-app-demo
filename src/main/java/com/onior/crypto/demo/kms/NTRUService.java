@@ -29,17 +29,21 @@ public class NTRUService {
     }
 
     public String decrypt(String ciphertext, String privateKeyString) throws IOException, InvalidCipherTextException {
+
         NTRUEngine ntru = new NTRUEngine();
         NTRUEncryptionPrivateKeyParameters privateKey = restorePrivateKey(privateKeyString);
         ntru.init(false, privateKey);
+
         byte[] ciphertextBytes = Base64.decode(ciphertext);
         return new String(ntru.processBlock(ciphertextBytes, 0, ciphertextBytes.length), "UTF-8");
     }
 
     public String encrypt(String plaintext, String publicKeyString) throws InvalidCipherTextException {
+
         NTRUEngine ntru = new NTRUEngine();
         NTRUEncryptionPublicKeyParameters publicKey = restorePublicKey(publicKeyString);
         ntru.init(true, publicKey);
+
         byte[] plaintextBytes = plaintext.getBytes();
         return Base64.toBase64String(ntru.processBlock(plaintextBytes, 0, plaintextBytes.length));
     }

@@ -10,6 +10,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 @Service
@@ -48,6 +49,6 @@ public class RSAService {
     }
 
     private PrivateKey recoverPrivateKey(String keyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        return KeyFactory.getInstance(cipherType).generatePrivate(new X509EncodedKeySpec(Base64.decode(keyString)));
+        return KeyFactory.getInstance(cipherType).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(keyString)));
     }
 }

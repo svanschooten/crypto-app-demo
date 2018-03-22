@@ -12,6 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+
 @RestController
 @RequestMapping(value = "/client/*")
 public class ClientController {
@@ -26,24 +35,24 @@ public class ClientController {
     @RequestMapping(value = "otp", method = RequestMethod.POST)
     public PublicKeyResponse verifyOTP(@RequestBody OTPRequest otpRequest) {
         if (otpRequest == null) return null;
-        ClientSession session = this.sessionService.createClientSession();
+        // TODO verify otp?
+        ClientSession session = sessionService.createClientSession();
         return PublicKeyResponse.fromClientSession(session);
     }
 
     @RequestMapping(value = "session", method = RequestMethod.GET)
     public PublicKeyResponse startSessionNegotiation() {
-        ClientSession session = this.sessionService.createClientSession();
+        ClientSession session = sessionService.createClientSession();
         return PublicKeyResponse.fromClientSession(session);
     }
 
     @RequestMapping(value = "session", method = RequestMethod.POST)
-    public ClientSessionResponse setupSession(@RequestBody SessionKeyRequest sessionKeyRequest) {
+    public ClientSessionResponse setupSession(@RequestBody SessionKeyRequest sessionKeyRequest) throws
+            BadPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException, IllegalBlockSizeException,
+            InvalidParameterSpecException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException {
         if (sessionKeyRequest == null) return null;
-        ClientSession session = this.sessionService.getClientSession(sessionKeyRequest.getSessionId());
+        ClientSession session = sessionService.getClientSession(sessionKeyRequest.getSessionId());
         if (session == null) return null;
-        // TODO decrypt sessionKeyRequest.getSessionKey() and expand to AES key.
-        // TODO generate refresh token.
-        // TODO return session response encrypted with AES key
-        return ClientSessionResponse.fromClientSession(session);
+        return sessionService.finalizeSession(session, sessionKeyRequest);
     }
 }
