@@ -10,9 +10,13 @@
 <body>
 
 <h1 id="security_state">...</h1>
-<label>Test input: <input name="test_text" id="test_text"></label><br>
-<button onclick="SecureSession.instance().startNegotiation()">Setup secure session</button>
+<button onclick="secureSession.startNegotiation()">Setup secure session</button>
+<br>
+<button onclick="secureSession.testSession()">Test secure session</button>
 
 <script src="js/secureSession.js"></script>
+<script type="application/javascript">
+    let secureSession = SecureSession.instance();
+</script>
 </body>
 </html>

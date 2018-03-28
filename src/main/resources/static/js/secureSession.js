@@ -3,8 +3,9 @@ const securityStates = {
     START: "Started session negotiation",
     PUBKEY: "Public key retrieved, creating shared key",
     FINALIZE: "Finalizing session",
-    VALID: "Session valid",
+    SETUP: "Session setup done",
     TEST: "Testing session status",
+    VALID: "Valid session test result",
     EXPIRED: "Session expired",
     REFRESHING: "Refreshing session",
     DELETE: "Deleting session",
@@ -13,7 +14,7 @@ const securityStates = {
 const ss = securityStates;
 
 class SecureSession {
-    constructor(config={base_url: null, state_container: null}) {
+    constructor (config={base_url: null, state_container: null}) {
         if (config.base_url) {
             this.base_url = config.base_url;
         } else {
@@ -29,11 +30,13 @@ class SecureSession {
         this.__sessionKey = null;
         this.__refreshToken = null;
         this.__sessionPassphraseLength = 64;
+        this.__sessionIVLength = 16;
         this.__sessionKeyIterations = 4096;
         this.__sessionKeyHasher = CryptoJS.algo.SHA512;
         this.__sessionKeySize = 256/32;
         this.__setState("IDLE");
     }
+
     async startNegotiation () {
         this.__setState(ss.START);
         try {
@@ -48,25 +51,58 @@ class SecureSession {
         }
     }
 
-    decrypt(iv, ciphertext) {
-        iv = CryptoJS.enc.Base64.parse(iv);
-        ciphertext = CryptoJS.enc.Base64.parse(ciphertext);
+    async testSession () {
+        this.__setState(ss.TEST);
+        let testcipher = this.encrypt("client");
+        try {
+            let data = await this.__doRequest("test", "POST", {
+                sessionId: this.__sessionId,
+                testText: testcipher
+            });
+            let response = this.decrypt(data.testResponse);
+            if (response === "server") {
+                this.__setState(ss.VALID);
+            } else {
+                this.__setState(ss.ERROR);
+                console.error(response);
+            }
+        } catch (e) {
+            console.error(e);
+            this.__setState(ss.ERROR);
+        }
+    }
+
+    decrypt (cipher) {
+        cipher = cipher.split(":");
+        let iv = CryptoJS.enc.Base64.parse(cipher[0]);
+        let ciphertext = CryptoJS.enc.Base64.parse(cipher[1]);
         return CryptoJS.AES.decrypt({
                 ciphertext: ciphertext
-            }, CryptoJS.enc.Hex.parse(this.__sessionKey),
+            }, CryptoJS.enc.Base64.parse(this.__sessionKey),
             {
                 iv: iv
             }).toString(CryptoJS.enc.Utf8);
     }
 
+    encrypt (plaintext) {
+        let iv = this.__generateRandomIV();
+        let ciphertext = CryptoJS.AES.encrypt(
+            plaintext,
+            CryptoJS.enc.Base64.parse(this.__sessionKey),
+            {
+                iv: CryptoJS.enc.Base64.parse(iv)
+            }).toString();
+        return iv + ":" + ciphertext;
+    }
+
     async __createSharedKey() {
         const passphrase = this.__generateRandomPassphrase();
-        this.__sessionKey = CryptoJS.PBKDF2(passphrase, "STATIC SALT",
+        this.__sessionKey = CryptoJS.PBKDF2(passphrase, "DOCULAYER STATIC SALT",
             {
                 keySize: this.__sessionKeySize,
                 hasher: this.__sessionKeyHasher,
                 iterations: this.__sessionKeyIterations
-            }).toString(CryptoJS.enc.Hex);
+            }).toString(CryptoJS.enc.Base64);
         try {
             let rsaCipher = new JSEncrypt();
             rsaCipher.setPublicKey(this.__publicKey);
@@ -84,17 +120,16 @@ class SecureSession {
         }
     }
 
-    __extractRefreshToken(data) {
-        data = data.split(":");
-        this.__refreshToken = this.decrypt(data[0], data[1]);
+    __extractRefreshToken (data) {
+        this.__refreshToken = this.decrypt(data);
         if (this.__refreshToken !== "") {
-            this.__setState(ss.VALID);
+            this.__setState(ss.SETUP);
         } else {
             this.__setState(ss.ERROR);
         }
     }
 
-    __doRequest(endpoint, method, body) {
+    __doRequest (endpoint, method, body) {
         return new Promise((resolve, reject) => {
             let config = {
                 method: method,
@@ -114,7 +149,7 @@ class SecureSession {
     }
 
 
-    __setState(state) {
+    __setState (state) {
         if (securityStates[state.toUpperCase()]) {
             this.stateContainer.innerText = securityStates[state];
         } else {
@@ -122,20 +157,29 @@ class SecureSession {
         }
     }
 
-    __generateRandomPassphrase() {
+    static __generateRandom (length) {
         let passphrase = "";
-        while (passphrase.length < this.__sessionPassphraseLength) {
+        while (passphrase.length < length) {
             passphrase += Math.random().toString(36).substring(2);
         }
-        return passphrase.substr(0, this.__sessionPassphraseLength);
+        return passphrase.substr(0, length);
     }
+
+    __generateRandomIV () {
+        return CryptoJS.enc.Utf8.parse(SecureSession.__generateRandom(this.__sessionIVLength))
+            .toString(CryptoJS.enc.Base64);
+    }
+
+    __generateRandomPassphrase () {
+        return SecureSession.__generateRandom(this.__sessionPassphraseLength);
+    }
+
+    static instance () {
+        if (SecureSession.__instance === null) {
+            SecureSession.__instance = new SecureSession();
+        }
+        return SecureSession.__instance;
+    };
 }
 
 SecureSession.__instance = null;
-
-SecureSession.instance = () => {
-    if (SecureSession.__instance === null) {
-        SecureSession.__instance = new SecureSession();
-    }
-    return SecureSession.__instance;
-};

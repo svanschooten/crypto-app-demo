@@ -23,6 +23,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -88,7 +89,6 @@ public class SessionService {
     public ClientSessionResponse finalizeClientSession(ClientSession session, SessionKeyRequest sessionKeyRequest) throws
             InvalidKeySpecException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchPaddingException, InvalidParameterSpecException, UnsupportedEncodingException {
-
         session.setRefreshToken(this.generateRefreshToken());
 
         ClientSessionResponse response = ClientSessionResponse.fromClientSession(session);
@@ -98,6 +98,7 @@ public class SessionService {
 
         session.setSessionKey(sessionKey);
         setSession(session);
+
         response.setRefreshToken(aesService.encrypt(response.getRefreshToken(), sessionKey));
 
         return response;

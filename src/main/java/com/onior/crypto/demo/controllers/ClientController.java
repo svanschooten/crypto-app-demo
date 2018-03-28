@@ -44,11 +44,14 @@ public class ClientController extends BaseController {
     @RequestMapping(value = "test", method = RequestMethod.POST)
     public SessionTestResponse testSecuritySetup(@RequestBody SessionTestRequest testRequest) throws
             NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException,
-            UnsupportedEncodingException, InvalidKeyException, InvalidParameterSpecException {
+            UnsupportedEncodingException, InvalidKeyException, InvalidParameterSpecException,
+            InvalidAlgorithmParameterException {
         if (testRequest == null) throw new IllegalArgumentException("Invalid test request");
         ClientSession session = (ClientSession) sessionService.getSession(testRequest.getSessionId(), Session.Type.CLIENT);
         AESService aesService = sessionService.getAesService();
-        return new SessionTestResponse(aesService.encrypt(testRequest.getTestText(), session.getSessionKey()));
+        String testText = aesService.decrypt(testRequest.getTestText(), session.getSessionKey());
+        if (!testText.equals("client")) throw new IllegalArgumentException("Invalid test decryption result");
+        return new SessionTestResponse(aesService.encrypt("server", session.getSessionKey()));
     }
 
     @RequestMapping(value = "start", method = RequestMethod.GET)

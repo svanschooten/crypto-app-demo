@@ -23,7 +23,7 @@ public class AESService {
     private final String keySpecType = "AES";
     private final int keySize = 256;
     private final int keyIterations = 4096;
-    private final byte[] staticSalt = "STATIC SALT".getBytes();
+    private final byte[] staticSalt = "DOCULAYER STATIC SALT".getBytes();
 
     public String expandKey(String passphrase) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecretKeyFactory factory = SecretKeyFactory.getInstance(keyType);
