@@ -37,6 +37,17 @@ class SecureSession {
         this.__setState("IDLE");
     }
 
+    destroy () {
+        this.__setState("IDLE");
+        SecureSession.__instance = null;
+        delete this.__sessionId;
+        delete this.__publicKey;
+        delete this.__sessionKey;
+        delete this.__refreshToken;
+        delete this.base_url;
+        delete this.stateContainer;
+    }
+
     async startNegotiation () {
         this.__setState(ss.START);
         try {
@@ -174,9 +185,9 @@ class SecureSession {
         return SecureSession.__generateRandom(this.__sessionPassphraseLength);
     }
 
-    static instance () {
+    static instance (base_url) {
         if (SecureSession.__instance === null) {
-            SecureSession.__instance = new SecureSession();
+            SecureSession.__instance = new SecureSession(base_url);
         }
         return SecureSession.__instance;
     };
