@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure session test</title>
+    <script src="js/crypto-js.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/jsencrypt.js"></script>
+</head>
+<body>
+
+<h1 id="security_state">...</h1>
+<label>Test input: <input name="test_text" id="test_text"></label><br>
+<button onclick="SecureSession.instance().startNegotiation()">Setup secure session</button>
+
+<script src="js/secureSession.js"></script>
+</body>
+</html>

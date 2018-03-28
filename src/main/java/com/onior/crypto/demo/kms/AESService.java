@@ -22,7 +22,7 @@ public class AESService {
     private final String keyType = "PBKDF2WithHmacSHA512";
     private final String keySpecType = "AES";
     private final int keySize = 256;
-    private final int keyIterations = 65536;
+    private final int keyIterations = 4096;
     private final byte[] staticSalt = "STATIC SALT".getBytes();
 
     public String expandKey(String passphrase) throws NoSuchAlgorithmException, InvalidKeySpecException {

@@ -1,12 +1,8 @@
 package com.onior.crypto.demo.controllers;
 
-import com.onior.crypto.demo.controllers.request.OTPRequest;
-import com.onior.crypto.demo.controllers.request.SessionDeleteRequest;
-import com.onior.crypto.demo.controllers.request.SessionKeyRequest;
-import com.onior.crypto.demo.controllers.request.SessionRefreshRequest;
-import com.onior.crypto.demo.controllers.response.ClientSessionResponse;
-import com.onior.crypto.demo.controllers.response.PublicKeyResponse;
-import com.onior.crypto.demo.controllers.response.SessionRefreshResponse;
+import com.onior.crypto.demo.controllers.request.*;
+import com.onior.crypto.demo.controllers.response.*;
+import com.onior.crypto.demo.kms.AESService;
 import com.onior.crypto.demo.kms.SessionService;
 import com.onior.crypto.demo.models.Session;
 import com.onior.crypto.demo.models.client.ClientSession;
@@ -27,7 +23,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 
 @RestController
-@RequestMapping(value = "/client/*")
+@RequestMapping(value = "/session/client/*")
 public class ClientController extends BaseController {
 
     private final SessionService sessionService;
@@ -45,13 +41,23 @@ public class ClientController extends BaseController {
         return PublicKeyResponse.fromClientSession(session);
     }
 
-    @RequestMapping(value = "session", method = RequestMethod.GET)
+    @RequestMapping(value = "test", method = RequestMethod.POST)
+    public SessionTestResponse testSecuritySetup(@RequestBody SessionTestRequest testRequest) throws
+            NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException,
+            UnsupportedEncodingException, InvalidKeyException, InvalidParameterSpecException {
+        if (testRequest == null) throw new IllegalArgumentException("Invalid test request");
+        ClientSession session = (ClientSession) sessionService.getSession(testRequest.getSessionId(), Session.Type.CLIENT);
+        AESService aesService = sessionService.getAesService();
+        return new SessionTestResponse(aesService.encrypt(testRequest.getTestText(), session.getSessionKey()));
+    }
+
+    @RequestMapping(value = "start", method = RequestMethod.GET)
     public PublicKeyResponse startSessionNegotiation() {
         ClientSession session = (ClientSession) sessionService.createSession(Session.Type.CLIENT);
         return PublicKeyResponse.fromClientSession(session);
     }
 
-    @RequestMapping(value = "session", method = RequestMethod.PUT)
+    @RequestMapping(value = "refresh", method = RequestMethod.POST)
     public SessionRefreshResponse refreshSession(@RequestBody SessionRefreshRequest sessionRefreshRequest) throws
             NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException,
             IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException, InvalidParameterSpecException,
@@ -61,19 +67,26 @@ public class ClientController extends BaseController {
         return sessionService.refreshSession(session, sessionRefreshRequest, Session.Type.CLIENT);
     }
 
-    @RequestMapping(value = "session", method = RequestMethod.DELETE)
-    public void deleteSession(@RequestBody SessionDeleteRequest sessionDeleteRequest) {
-        if (sessionDeleteRequest == null) throw new IllegalArgumentException("No session data");
-        ClientSession session = (ClientSession) sessionService.getSession(sessionDeleteRequest.getSessionId(), Session.Type.CLIENT);
+    @RequestMapping(value = "delete", method = RequestMethod.DELETE)
+    public void deleteSession(@RequestBody SessionIdRequest sessionIdRequest) {
+        if (sessionIdRequest == null) throw new IllegalArgumentException("No session data");
+        ClientSession session = (ClientSession) sessionService.getSession(sessionIdRequest.getSessionId(), Session.Type.CLIENT);
         sessionService.destroySession(session, Session.Type.CLIENT);
     }
 
-    @RequestMapping(value = "session", method = RequestMethod.POST)
+    @RequestMapping(value = "finalize", method = RequestMethod.POST)
     public ClientSessionResponse setupSession(@RequestBody SessionKeyRequest sessionKeyRequest) throws
             BadPaddingException, UnsupportedEncodingException, NoSuchAlgorithmException, IllegalBlockSizeException,
             InvalidParameterSpecException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException {
         if (sessionKeyRequest == null) throw new IllegalArgumentException("No session data");
         ClientSession session = (ClientSession) sessionService.getSession(sessionKeyRequest.getSessionId(), Session.Type.CLIENT);
         return sessionService.finalizeClientSession(session, sessionKeyRequest);
+    }
+
+    @RequestMapping(value = "validate", method = RequestMethod.POST)
+    public SessionIdResponse validateSession(@RequestBody SessionIdRequest sessionIdRequest) {
+        if (sessionIdRequest == null) throw new IllegalArgumentException("No session data");
+        ClientSession session = (ClientSession) sessionService.getSession(sessionIdRequest.getSessionId(), Session.Type.CLIENT);
+        return new SessionIdResponse(session.getSessionId());
     }
 }

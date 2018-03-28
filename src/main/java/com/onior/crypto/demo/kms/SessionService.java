@@ -9,6 +9,7 @@ import com.onior.crypto.demo.controllers.response.SessionRefreshResponse;
 import com.onior.crypto.demo.models.Session;
 import com.onior.crypto.demo.models.application.ApplicationSession;
 import com.onior.crypto.demo.models.client.ClientSession;
+import lombok.Getter;
 import org.bouncycastle.util.encoders.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class SessionService {
     private HashMap<String, Session> applicationSessions;
     private RSAService rsaService;
     private NTRUService ntruService;
+    @Getter
     private AESService aesService;
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
