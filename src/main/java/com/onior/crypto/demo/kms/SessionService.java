@@ -23,11 +23,13 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+/**
+ * Service that manages {@link Session} and basic cryptographic functions.
+ */
 @Service
 public class SessionService {
 
@@ -48,18 +50,34 @@ public class SessionService {
         this.aesService = aesService;
     }
 
+    /**
+     * Generates a random refresh token based on UUID
+     * @return The {@link String} representation of the refresh token
+     */
     private String generateRefreshToken() {
         return Base64.toBase64String(UUID.randomUUID().toString().getBytes());
     }
 
+    /**
+     * Inserts or updates a {@link Session}
+     * @param session The {@link ClientSession} to insert or update
+     */
     private void setSession(ClientSession session) {
         this.clientSessions.put(session.getSessionId(), session);
     }
 
+    /**
+     * Inserts or updates a {@link Session}
+     * @param session The {@link ApplicationSession} to insert or update
+     */
     private void setSession(ApplicationSession session) {
         this.applicationSessions.put(session.getSessionId(), session);
     }
 
+    /**
+     * Creates and returns a new {@link ClientSession}
+     * @return The new {@link ClientSession}
+     */
     private ClientSession createClientSession() {
         ClientSession session = new ClientSession();
         session = this.rsaService.fillSession(session);
@@ -67,6 +85,11 @@ public class SessionService {
         return session;
     }
 
+    /**
+     * Agnostic implementation for creating a Session based on Type
+     * @param type The {@link Session.Type}
+     * @return The newly created {@link Session}
+     */
     public Session createSession(Session.Type type) {
         if (type == Session.Type.CLIENT) {
             return createClientSession();
@@ -75,6 +98,13 @@ public class SessionService {
         }
     }
 
+    /**
+     * Returns a {@link Session} based on type and ID
+     * @param sessionId The {@link Session} ID to find
+     * @param type The type of {@link Session} to find
+     * @return The found {@link Session}
+     * @throws NullPointerException When not found
+     */
     public Session getSession(String sessionId, Session.Type type) {
         Session session;
         if (type == Session.Type.CLIENT) {
@@ -86,6 +116,20 @@ public class SessionService {
         return session;
     }
 
+    /**
+     * Finalizes the {@link Session} that has the basic setup setup done (last part of handshake)
+     * @param session The {@link Session} to finalize
+     * @param sessionKeyRequest The {@link SessionKeyRequest}
+     * @return {@link ClientSessionResponse} containing the encrypted refreshToken
+     * @throws InvalidKeySpecException When the keys do not match the given {@link java.security.spec.KeySpec}
+     * @throws NoSuchAlgorithmException When the algorithm is not found by the security provider
+     * @throws IllegalBlockSizeException When the block size is not compatible
+     * @throws InvalidKeyException When the keys do not match
+     * @throws BadPaddingException When the padding is invalid
+     * @throws NoSuchPaddingException When the given type of padding is not found by the security provider
+     * @throws InvalidParameterSpecException When the given parameter specification is invalid
+     * @throws UnsupportedEncodingException When the encoding is not supported
+     */
     public ClientSessionResponse finalizeClientSession(ClientSession session, SessionKeyRequest sessionKeyRequest) throws
             InvalidKeySpecException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, NoSuchPaddingException, InvalidParameterSpecException, UnsupportedEncodingException {
@@ -104,6 +148,10 @@ public class SessionService {
         return response;
     }
 
+    /**
+     * Creates and returns a new {@link ApplicationSession}
+     * @return The new {@link ApplicationSession}
+     */
     private ApplicationSession createApplicationSession() {
         ApplicationSession session = new ApplicationSession();
         session = this.ntruService.fillSession(session);
@@ -111,6 +159,22 @@ public class SessionService {
         return session;
     }
 
+    /**
+     * Refreshes a session based on the refresh token
+     * @param session The {@link Session} to refresh
+     * @param sessionRefreshRequest {@link SessionRefreshRequest} containing the current session key encrypted with the expanded refresh token
+     * @param type The {@link Session.Type}
+     * @return {@link SessionRefreshResponse} containing the new refresh token and session key
+     * @throws InvalidKeySpecException When the keys do not match the given {@link java.security.spec.KeySpec}
+     * @throws NoSuchAlgorithmException When the algorithm is not found by the security provider
+     * @throws IllegalBlockSizeException When the block size is not compatible
+     * @throws InvalidKeyException When the keys do not match
+     * @throws BadPaddingException When the padding is invalid
+     * @throws NoSuchPaddingException When the given type of padding is not found by the security provider
+     * @throws InvalidParameterSpecException When the given parameter specification is invalid
+     * @throws UnsupportedEncodingException When the encoding is not supported
+     * @throws InvalidAlgorithmParameterException When a key parameter is not correct
+     */
     public SessionRefreshResponse refreshSession(Session session, SessionRefreshRequest sessionRefreshRequest, Session.Type type) throws
             InvalidKeySpecException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidKeyException,
             BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException, InvalidParameterSpecException,
@@ -137,6 +201,11 @@ public class SessionService {
         return response;
     }
 
+    /**
+     * Destroys a {@link Session}
+     * @param session The {@link Session} to destroy
+     * @param type The {@link Session.Type}
+     */
     public void destroySession(Session session, Session.Type type) {
         if (type == Session.Type.CLIENT) {
             clientSessions.remove(session.getSessionId());
@@ -145,6 +214,13 @@ public class SessionService {
         }
     }
 
+    /**
+     * Finalizes the {@link Session} that has the basic setup setup done (last part of handshake)
+     * TODO implement finalizing the application session
+     * @param session The {@link ApplicationSession} to finalize
+     * @param applicationIdRequest {@link ApplicationIdRequest} containing the application ID (that should be whitelisted) encrypted with the session servers' public key
+     * @return {@link ApplicationSessionResponse} containing the session key encrypted with the session applications' public key
+     */
     public ApplicationSessionResponse finalizeApplicationSession(ApplicationSession session, ApplicationIdRequest applicationIdRequest) {
         return null;
     }

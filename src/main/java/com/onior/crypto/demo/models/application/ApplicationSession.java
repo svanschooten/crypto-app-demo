@@ -4,6 +4,9 @@ import com.onior.crypto.demo.models.Session;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Application session model
+ */
 public class ApplicationSession extends Session {
 
     @Getter @Setter

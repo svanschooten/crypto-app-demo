@@ -3883,7 +3883,7 @@ version: 2.9.0
             this.asn1Array.push(asn1Object);
         };
 
-        this.asn1Array = new Array();
+        this.asn1Array = [];
         if (typeof params != "undefined") {
             if (typeof params['array'] != "undefined") {
                 this.asn1Array = params['array'];
@@ -4719,7 +4719,7 @@ version: 2.9.0
         this.hT = "31";
         this.sortFlag = true; // item shall be sorted only in ASN.1 DER
         this.getFreshValueHex = function() {
-            var a = new Array();
+            var a = [];
             for (var i = 0; i < this.asn1Array.length; i++) {
                 var asn1Obj = this.asn1Array[i];
                 a.push(asn1Obj.getEncodedHex());

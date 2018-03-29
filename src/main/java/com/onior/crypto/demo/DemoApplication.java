@@ -11,6 +11,10 @@ import java.security.Security;
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class })
 public class DemoApplication {
 
+    /**
+     * The main application root, starts the Spring boot application, and adds the BouncyCastle security provider
+     * @param args Application arguments
+     */
 	public static void main(String[] args) {
 		Security.addProvider(new BouncyCastleProvider());
 		Security.addProvider(new BouncyCastlePQCProvider());

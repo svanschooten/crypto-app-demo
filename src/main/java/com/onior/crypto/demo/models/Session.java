@@ -6,6 +6,9 @@ import lombok.Setter;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Basic session model that contains the most basic in memory values
+ */
 public class Session {
 
     @Getter @Setter
