@@ -57,6 +57,7 @@ class SecureSession {
             this.__setState(ss.PUBKEY);
             this.__createSharedKey().then().catch(console.error);
         } catch (e) {
+            console.error("Start negotiation error!");
             console.error(e);
             this.__setState(ss.ERROR);
         }
@@ -74,10 +75,11 @@ class SecureSession {
             if (response === "server") {
                 this.__setState(ss.VALID);
             } else {
-                this.__setState(ss.ERROR);
                 console.error(response);
+                this.__setState(ss.ERROR);
             }
         } catch (e) {
+            console.error("Test session error!");
             console.error(e);
             this.__setState(ss.ERROR);
         }
@@ -126,6 +128,7 @@ class SecureSession {
             });
             this.__extractRefreshToken(data.refreshToken);
         } catch (e) {
+            console.error("Shared key error!");
             console.error(e);
             this.__setState(ss.ERROR);
         }
@@ -136,6 +139,7 @@ class SecureSession {
         if (this.__refreshToken !== "") {
             this.__setState(ss.SETUP);
         } else {
+            console.error("Refresh token: " + this.__refreshToken);
             this.__setState(ss.ERROR);
         }
     }
